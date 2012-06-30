@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.util.Log;
 
@@ -21,7 +20,6 @@ class LogicalTile {
 		return "serial=" + serial + ", lp.x=" + lp.x + ", lp.y=" + lp.y;
 	}
 }
-
 public class LogicalBoard {
 	private static final String TAG = LogicalBoard.class.getSimpleName();
 	private static final float DISTANCE_FACTOR	= 2.0F;
@@ -30,9 +28,9 @@ public class LogicalBoard {
 	int cols;
 	LogicalTile[][] tiles;
 	LogicalTile hole;
-	int distance = 0;
 	List<Point> footprints = new ArrayList<Point>();
-	Random random = new Random();
+	private int distance = 0;
+	private Random random = new Random();
 	
 	LogicalBoard(int r, int c) {
 		rows = r; cols = c;
@@ -45,7 +43,10 @@ public class LogicalBoard {
 		for (int i=0, serial=0; i<rows; i++) {
 			for (int j=0; j<cols; j++) {
 				LogicalTile tile = new LogicalTile(serial, new Point(j, i));
-				if (serial == holeSerial) hole = tile;
+				if (serial == holeSerial) {
+					hole = tile;
+					footprints.add(hole.lp);
+				}
 				ts[i][j] = tile;
 				serial++;
 			}
@@ -56,7 +57,7 @@ public class LogicalBoard {
 		Point ip = initialPosition(tile.serial);
 		return Math.abs(tile.lp.x - ip.x) + Math.abs(tile.lp.y - ip.y);
 	}
-	private LogicalTile slideTileAtRandom(LogicalTile previous) {
+	private LogicalTile slideAtRandom(LogicalTile previous) {
 		LogicalTile[] nominees = new LogicalTile[4];
 		int counter = 0;
 		Point h = hole.lp;
@@ -79,7 +80,12 @@ public class LogicalBoard {
 		}
 		// 移動させるタイルを決定
 		LogicalTile target = nominees[random.nextInt(counter)];
+		slide(target);	// タイルをスライドする
+		return target;
+	}
+	LogicalTile slide(LogicalTile target) {
 		distance -= distance(target);	// 現状の離散度を減算
+		Point h = hole.lp;
 		// タイルを移動する
 		Point t = target.lp;
 		LogicalTile tmp = tiles[t.y][t.x];
@@ -92,22 +98,22 @@ public class LogicalBoard {
 		distance += distance(target);	// 新しい離散度を加算
 		return target;
 	}
-	LogicalTile shuffle() {
+	int shuffle() {
 		int total = (int)(rows * cols * DISTANCE_FACTOR);
 		int maxSlide = (int)(total * SHUFFLE_FACTOR);
 		return shuffle(total, maxSlide);
 	}
-	private LogicalTile shuffle(int totalDistance, int maxSlide) {
-		Log.d(TAG, "totalDistance=" + totalDistance + ", maxSlide=" + maxSlide);
+	private int shuffle(int totalDistance, int maxSlide) {
+//		Log.d(TAG, "totalDistance=" + totalDistance + ", maxSlide=" + maxSlide);
 		if (distance != 0) initializeTiles(tiles);
 		LogicalTile previous = null;
-//maxSlide=0;
-		for (int i=0; i<maxSlide; i++) {
-			previous = slideTileAtRandom(previous);
+		int counter = 0;
+		for (; counter<maxSlide; counter++) {
+			previous = slideAtRandom(previous);
 			if (distance >= totalDistance) break;
 			//print(); // for debug
 		}
-		return null;
+		return counter;
 	}
 	Direction getDirection(LogicalTile tile) {
 		Point h = hole.lp; Point t = tile.lp;
