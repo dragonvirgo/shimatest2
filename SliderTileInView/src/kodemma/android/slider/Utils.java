@@ -1,4 +1,4 @@
-package shima.android;
+package kodemma.android.slider;
 
 import android.graphics.Canvas;
 import android.graphics.Matrix;

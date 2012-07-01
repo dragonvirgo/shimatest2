@@ -1,4 +1,4 @@
-package shima.android;
+package kodemma.android.slider;
 
 import java.util.ArrayList;
 import java.util.List;
