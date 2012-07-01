@@ -28,7 +28,6 @@ import android.widget.ImageView;
 
 public class PaintView extends View {
 	private static final String TAG = PaintView.class.getSimpleName();
-	private static final int BORDER_WIDTH = 2;
 	private Bitmap offScreenBitmap;
 	private Canvas offScreenCanvas;
 	private ImageView backgroundView;
@@ -49,8 +48,6 @@ public class PaintView extends View {
 	private List<Tile> movables = new ArrayList<Tile>();
 	private Board board;
 	
-	private int slidedTimes = 0;
-	
 	public PaintView(Context context) { this(context, null); }
 	public PaintView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -70,7 +67,7 @@ public class PaintView extends View {
 		offScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
 		offScreenCanvas = new Canvas(offScreenBitmap);
 		
-		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.bg1);
+		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sky);
 		board = new Board(bitmap, 4, 3);
 		board.initializeTiles(w, h);
 		board.shuffle();
@@ -95,26 +92,17 @@ public class PaintView extends View {
 				for (Tile t : movables) board.slide(t);
 			}
 			invalidate(invalidated);
-			vec = null;
 			invalidated = null;
+			vec = null;
 			break;
 		}
 		return true;
 	}
 	@Override protected void onDraw(Canvas canvas) {
-		Rect buffer = new Rect();
-		if (invalidated == null) {
-			for (Tile t : board.tiles) {
-				if (board.isHole(t)) continue; 
-				Utils.scaleByBorder(-BORDER_WIDTH, t.dst, buffer);
-				canvas.drawBitmap(board.bitmap, t.src, buffer, null);
-			}
-		} else {
-			for (Tile t : movables) {
-				Utils.translateByVector(vec, t.dst, buffer);
-				Utils.scaleByBorder(-BORDER_WIDTH, buffer, buffer);
-				canvas.drawBitmap(board.bitmap, t.src, buffer, null);
-			}
+		if (invalidated == null) {	// ゲームボード上の全タイルを描画する
+			board.draw(canvas);
+		} else {					// 移動したタイルだけを描画する
+			for (Tile t : movables) board.drawTile(canvas, t, vec);
 		}
 	}
 	boolean setPenType(PenType type) {

@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -29,6 +32,7 @@ class Tile {
 }
 // パズルのゲーム盤を表すクラス
 public class Board {
+	private static final int BORDER_WIDTH = 2;	// タイルの枠線の幅
 	Bitmap bitmap;								// ユーザが選択したビットマップイメージ
 	int rows;									// パズルの行数
 	int cols;									// パズルの列数
@@ -37,9 +41,21 @@ public class Board {
 	private Map<Point, Rect> dstRectsMap;		// タイルの論理位置と描画時の矩形のマッパー
 	private Map<LogicalTile, Tile> tilesMap;	// 論理タイルとタイルのマッパー
 	int slideCount = 0;							// ユーザのスライド回数
+	boolean showId = true;						// タイル番号の表示/非表示
+	Paint textPaint;							// タイル番号表示用(テキスト)
+	Paint tagPaint;								// タイル番号表示用(タグ)
+	Paint shadowPaint;							// タイル番号表示用(タグの影)
 	
 	Board(Bitmap b, int r, int c) {
-		bitmap = b; logicalBoard = new LogicalBoard(rows=r, cols=c);
+		bitmap = b;
+		logicalBoard = new LogicalBoard(rows=r, cols=c);
+		textPaint	= new Paint(Paint.ANTI_ALIAS_FLAG);
+		tagPaint	= new Paint(Paint.ANTI_ALIAS_FLAG);
+		shadowPaint	= new Paint(Paint.ANTI_ALIAS_FLAG);
+		textPaint.setTextSize(14);
+		textPaint.setColor(Color.WHITE);
+		tagPaint.setColor(Color.GRAY);
+		shadowPaint.setColor(Color.DKGRAY);
 	}
 	// タイルの生成と初期化を行う
 	void initializeTiles(int viewWidth, int viewHeight) {
@@ -120,6 +136,35 @@ public class Board {
 		hole.dst = tmp;
 		slideCount++;
 	}
-	// 穴タイルかどうか
-	boolean isHole(Tile tile) { return logicalBoard.hole == tile.logicalTile; }
+	// ゲーム盤全体を描画する
+	void draw(Canvas canvas) {
+		Rect buffer = new Rect();								// 作業用の矩形
+		for (Tile t : tiles) {
+			if (logicalBoard.hole == t.logicalTile) continue;	// 穴タイルは描画しない
+			drawTile(canvas, t, buffer);
+		}
+	}
+	// 移動ベクトルを加算したタイルを描画する
+	void drawTile(Canvas canvas, Tile tile, Point vector) {
+		Rect buffer = new Rect();								// 作業用の矩形
+		Utils.translateByVector(vector, tile.dst, buffer);		// 移動ベクトルを加算する
+		Utils.scaleByBorder(-BORDER_WIDTH, buffer, buffer);		// 枠線の分だけタイルを縮小する
+		drawTile(canvas, tile.src, buffer, getTileId(tile));
+	}
+	// タイルを描画する - draw()メソッドからコールされる
+	private void drawTile(Canvas canvas, Tile tile, Rect buffer) {
+		Utils.scaleByBorder(-BORDER_WIDTH, tile.dst, buffer);	// 枠線の分だけタイルを縮小する
+		drawTile(canvas, tile.src, buffer, getTileId(tile));
+	}
+	// タイルを描画する - 最終的にこのメソッドで描画
+	private void drawTile(Canvas canvas, Rect s, Rect d, String id) {
+		canvas.drawBitmap(bitmap, s, d, null);
+		if (showId) {	// タイルの番号タグを描画する
+			Utils.drawTag(canvas, id, (d.left+d.right)/2, (d.top+d.bottom)/2, textPaint, tagPaint, shadowPaint);
+		}
+	}
+	// タイルの番号を取得する
+	private String getTileId(Tile tile) {
+		return (showId)? String.valueOf(tile.logicalTile.serial + 1) : null;
+	}
 }

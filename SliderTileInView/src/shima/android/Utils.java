@@ -1,8 +1,12 @@
 package shima.android;
 
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Paint.FontMetrics;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 public class Utils {
 	public static Matrix adjustingMatrix(float srcWidth, float srcHeight, float dstWidth, float dstHeight) {
@@ -66,7 +70,32 @@ public class Utils {
 		rect.bottom	+= vec.y;
 		return rect;
 	}
+	public static RectF translate(float x, float y, RectF rect) {
+		rect.left	+= x;
+		rect.top	+= y;
+		rect.right	+= x;
+		rect.bottom	+= y;
+		return rect;
+	}
 	public static boolean isSlided(Point vec, Point limiter) {
 		return Math.abs(vec.x*2) > Math.abs(limiter.x) || Math.abs(vec.y*2) > Math.abs(limiter.y);
+	}
+	public static void drawTag(Canvas canvas, String text,  float x, float y, Paint textPaint, Paint tagPaint, Paint shadowPaint) {
+		final float MARGIN = 5f;
+		final float SHADOW = 2f;
+		FontMetrics fm = textPaint.getFontMetrics();
+		float textWidth = textPaint.measureText(text);		// 文字列の幅を取得
+		float textX = x - textWidth / 2f;					// 文字列の幅からX座標を計算
+		float textY = y - (fm.ascent + fm.descent) / 2f;	// 文字列の高さからY座標を計算
+		// タグの影の矩形を計算
+		float left		= textX - MARGIN + SHADOW ;
+		float right		= textX + MARGIN + SHADOW + textWidth;
+		float top		= textY - MARGIN + SHADOW + fm.ascent;
+		float bottom	= textY + MARGIN + SHADOW + fm.descent; 
+		RectF rect = new RectF(left, top, right, bottom);
+		canvas.drawRoundRect(rect, MARGIN, MARGIN, shadowPaint);	// タグの影を描画
+		rect = translate(-SHADOW, -SHADOW, rect);					// タグの影の部分をスライドする
+		canvas.drawRoundRect(rect, MARGIN, MARGIN, tagPaint);		// タグの描画
+		canvas.drawText(text, textX, textY, textPaint);				// 文字列の描画
 	}
 }
