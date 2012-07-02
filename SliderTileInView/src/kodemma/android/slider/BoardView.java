@@ -1,6 +1,7 @@
 package kodemma.android.slider;
 
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.List;
 
 import android.app.Activity;
@@ -30,6 +31,10 @@ enum GameStatus {
 	WAITING, PLAYING, PAUSED;
 	boolean shielded() { return this == WAITING || this == PAUSED; }
 }
+interface TileListener extends EventListener {
+	public void onTileSlided(int count);
+}
+
 public class BoardView extends View {
 	private static final String TAG = BoardView.class.getSimpleName();
 	private Point sp = new Point();			// 始点
@@ -41,6 +46,7 @@ public class BoardView extends View {
 	private List<Tile> movables = new ArrayList<Tile>();	// スライドするタイル群
 	
 	GameStatus gameStatus = GameStatus.WAITING;
+	TileListener tileListener;
 	// シールド関連
 	private Rect shield;
 	private Paint shieldPaint;
@@ -58,9 +64,11 @@ public class BoardView extends View {
 		shield = new Rect(0, 0, w, h);
 		
 		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sky);
-		board = new Board(bitmap, 4, 3);
-		board.initializeTiles(w, h);
+		board = new Board(bitmap, 4, 3, w, h);
+		board.initializeTiles();
 //		board.shuffle();
+		
+		tileListener.onTileSlided(board.slideCount);
 	}
 	@Override public boolean onTouchEvent(MotionEvent e) {
 		if (gameStatus.shielded()) { // シールド時はイベントを受け付けない
@@ -83,6 +91,9 @@ public class BoardView extends View {
 			if (Utils.isSlided(vec, limiter)) {
 				for (Tile t : movables) board.slide(t);
 			}
+			if (tileListener != null) {
+				tileListener.onTileSlided(board.slideCount);
+			}
 			invalidate(invalidated);
 			invalidated = null;
 			vec = null;
@@ -101,14 +112,34 @@ public class BoardView extends View {
 		}
 	}
 	GameStatus startButtonPressed() {
-		if (gameStatus == GameStatus.WAITING) {
+		switch (gameStatus) {
+		case WAITING:
 			board.shuffle();
+			if (tileListener != null) tileListener.onTileSlided(board.slideCount);
 			gameStatus = GameStatus.PLAYING;
 			invalidate();
-		} else if (gameStatus == GameStatus.PLAYING) {
+			break;
+		case PLAYING:
 			// dialog
 			board.shuffle();
+			if (tileListener != null) tileListener.onTileSlided(board.slideCount);
 			invalidate();
+			break;
+		}
+		return gameStatus;
+	}
+	GameStatus pauseButtonPressed() {
+		switch (gameStatus) {
+		case WAITING:
+			break;
+		case PLAYING:
+			gameStatus = GameStatus.PAUSED;
+			invalidate();
+			break;
+		case PAUSED:
+			gameStatus = GameStatus.PLAYING;
+			invalidate();
+			break;
 		}
 		return gameStatus;
 	}

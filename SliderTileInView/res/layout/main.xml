@@ -71,6 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             />
+<!-- 
         <Button style="@style/normalButton"
             android:id="@id/board_button_answer"
             android:text="@string/board_button_answer"
@@ -85,5 +86,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             />
+-->
     </LinearLayout>
 </LinearLayout>

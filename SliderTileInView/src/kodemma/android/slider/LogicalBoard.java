@@ -37,6 +37,9 @@ public class LogicalBoard {
 		tiles =  new LogicalTile[rows][cols];
 		initializeTiles(tiles);
 	}
+	boolean initialized(int r, int c) {
+		return false;
+	}
 	private void initializeTiles(LogicalTile[][] ts) {
 		footprints.clear();
 		int holeSerial = random.nextInt(rows*cols);

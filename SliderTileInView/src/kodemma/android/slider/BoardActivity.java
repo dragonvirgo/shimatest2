@@ -7,14 +7,18 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
-public class BoardActivity extends Activity {
+public class BoardActivity extends Activity implements TileListener {
 	public BoardView boardView;
+	public TextView slideCounterView;
 
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		boardView = (BoardView)findViewById(R.id.boardView);
+		boardView.tileListener = this;
+		slideCounterView = (TextView)findViewById(R.id.slideCounter);
 		new ButtonClickListener();
 	}
 	private class ButtonClickListener implements View.OnClickListener {
@@ -32,6 +36,7 @@ public class BoardActivity extends Activity {
 				boardView.startButtonPressed();
 				break;
 			case R.id.board_button_pause:
+				boardView.pauseButtonPressed();
 				break;
 			case R.id.board_button_setting:
 				break;
@@ -41,5 +46,8 @@ public class BoardActivity extends Activity {
 				break;
 			}
 		}
+	}
+	public void onTileSlided(int count) {
+		slideCounterView.setText(String.valueOf(count));
 	}
 }

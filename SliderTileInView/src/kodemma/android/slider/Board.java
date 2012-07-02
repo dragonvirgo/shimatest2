@@ -36,6 +36,8 @@ public class Board {
 	Bitmap bitmap;								// ユーザが選択したビットマップイメージ
 	int rows;									// パズルの行数
 	int cols;									// パズルの列数
+	int width;									// BoardViewの幅
+	int height;									// BoardViewの高さ
 	List<Tile> tiles;							// タイルの集合
 	private LogicalBoard logicalBoard;			// 論理ゲーム盤
 	private Map<Point, Rect> dstRectsMap;		// タイルの論理位置と描画時の矩形のマッパー
@@ -46,9 +48,11 @@ public class Board {
 	Paint tagPaint;								// タイル番号表示用(タグ)
 	Paint shadowPaint;							// タイル番号表示用(タグの影)
 	
-	Board(Bitmap b, int r, int c) {
+	Board(Bitmap b, int r, int c, int w, int h) {
 		bitmap = b;
-		logicalBoard = new LogicalBoard(rows=r, cols=c);
+		rows = r; cols = c;
+		width = w; height = h;
+//		logicalBoard = new LogicalBoard(rows=r, cols=c);
 		textPaint	= new Paint(Paint.ANTI_ALIAS_FLAG);
 		tagPaint	= new Paint(Paint.ANTI_ALIAS_FLAG);
 		shadowPaint	= new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -58,9 +62,11 @@ public class Board {
 		shadowPaint.setColor(Color.DKGRAY);
 	}
 	// タイルの生成と初期化を行う
-	void initializeTiles(int viewWidth, int viewHeight) {
+	void initializeTiles() {
 		// タイルのsrc矩形からdst矩形への変換をするためのマトリックスを作成する
-		Matrix m = Utils.adjustingMatrix(bitmap.getWidth(), bitmap.getHeight(), viewWidth, viewHeight);
+		Matrix m = Utils.adjustingMatrix(bitmap.getWidth(), bitmap.getHeight(), width, height);
+		// 論理タイルの初期化
+		logicalBoard = new LogicalBoard(rows, cols);
 		// タイルの生成と初期化を行う
 		tiles = createTiles(rows, cols, bitmap.getWidth(), bitmap.getHeight(), m);
 	}
@@ -77,6 +83,7 @@ public class Board {
 				RectF src = new RectF(left, top, right, bottom);
 				RectF dst = new RectF();
 				m.mapRect(dst, src);
+				
 				LogicalTile logicalTile = logicalBoard.tiles[i][j];
 				Tile tile = new Tile(src, dst, logicalTile);
 				dstRectsMap.put(logicalTile.lp, new Rect(tile.dst));
@@ -120,6 +127,9 @@ public class Board {
 	// タイルをランダムにシャッフルする
 	int shuffle() {
 		slideCount = 0;
+		// 論理タイルの初期化 - 本当は無条件にnewするのは無駄が多いが、とりあえず。
+		initializeTiles();
+		//
 		int counter = logicalBoard.shuffle();	// 論理タイルをシャッフルする
 		for (Tile tile : tiles) {	// 論理タイルのシャッフル結果に合わせて、dst矩形も再設定する。
 			tile.dst = dstRectsMap.get(tile.logicalTile.lp);
