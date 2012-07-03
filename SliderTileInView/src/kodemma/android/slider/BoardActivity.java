@@ -6,10 +6,9 @@ import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-public class BoardActivity extends Activity implements TileListener {
+public class BoardActivity extends Activity implements BoardViewListener {
 	public BoardView boardView;
 	public TextView slideCounterView;
 
@@ -17,9 +16,15 @@ public class BoardActivity extends Activity implements TileListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		boardView = (BoardView)findViewById(R.id.boardView);
-		boardView.tileListener = this;
+		boardView.boardViewListener = this;
 		slideCounterView = (TextView)findViewById(R.id.slideCounter);
 		new ButtonClickListener();
+	}
+	public void onTileSlided(int count) {
+		slideCounterView.setText(String.valueOf(count));
+	}
+	public void onGameSolved(int rows, int cols, int slides, long lapseTime) {
+		// ここでランキング画面へ遷移する
 	}
 	private class ButtonClickListener implements View.OnClickListener {
 		private ButtonClickListener() {
@@ -46,8 +51,5 @@ public class BoardActivity extends Activity implements TileListener {
 				break;
 			}
 		}
-	}
-	public void onTileSlided(int count) {
-		slideCounterView.setText(String.valueOf(count));
 	}
 }

@@ -146,6 +146,8 @@ public class Board {
 		hole.dst = tmp;
 		slideCount++;
 	}
+	// パズルが解かれたかどうか
+	boolean solved() { return logicalBoard.distance == 0; }
 	// ゲーム盤全体を描画する
 	void draw(Canvas canvas) {
 		Rect buffer = new Rect();								// 作業用の矩形
@@ -176,5 +178,18 @@ public class Board {
 	// タイルの番号を取得する
 	private String getTileId(Tile tile) {
 		return (showId)? String.valueOf(tile.logicalTile.serial + 1) : null;
+	}
+	// ゲーム完了時のスプラッシュアニメーションの１フレームを描画する
+	void drawFrameInSplash(Canvas canvas, Matrix m) {
+		Rect buffer = new Rect();								// 作業用の矩形
+		for (Tile t : tiles) {
+		Matrix translate = new Matrix();
+			translate.setTranslate(t.dst.left, t.dst.top);
+			RectF src = new RectF(t.src);
+			m.postConcat(translate);
+			m.mapRect(src);
+			src.round(buffer);
+			canvas.drawBitmap(bitmap, t.src, buffer, null);
+		}
 	}
 }

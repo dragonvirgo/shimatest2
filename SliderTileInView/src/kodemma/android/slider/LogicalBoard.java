@@ -29,7 +29,7 @@ public class LogicalBoard {
 	LogicalTile[][] tiles;
 	LogicalTile hole;
 	List<Point> footprints = new ArrayList<Point>();
-	private int distance = 0;
+	int distance = 0;
 	private Random random = new Random();
 	
 	LogicalBoard(int r, int c) {
@@ -99,11 +99,13 @@ public class LogicalBoard {
 		hole.lp = t;
 		footprints.add(t);				// 棋譜に追加
 		distance += distance(target);	// 新しい離散度を加算
+Log.d(TAG, "- distance=" + distance);
 		return target;
 	}
 	int shuffle() {
 		int total = (int)(rows * cols * DISTANCE_FACTOR);
 		int maxSlide = (int)(total * SHUFFLE_FACTOR);
+maxSlide = 2;
 		return shuffle(total, maxSlide);
 	}
 	private int shuffle(int totalDistance, int maxSlide) {
@@ -118,12 +120,29 @@ public class LogicalBoard {
 		}
 		return counter;
 	}
+	// 最後に移動したタイルを取得
+	LogicalTile getUndoTile() {
+		int size = footprints.size();
+		if (size < 2) return null;
+		Point p = footprints.get(size - 2);
+		return tiles[p.y][p.x];
+	}
+	// 最後に移動したタイルをアンドゥする際の方向を取得する
+	Direction getUndoDirection() {
+		Point t = getUndoTile().lp;
+		if (t == null) return Direction.NONE;
+		return getDirection(hole.lp, t);
+	}
+	// タイルから穴への方向を取得する。 
+	Direction getDirection(Point holePos, Point tilePos) {
+		return (holePos.x == tilePos.x)?
+				(holePos.y < tilePos.y)? Direction.UP : Direction.DOWN :
+				(holePos.x < tilePos.x)? Direction.LEFT : Direction.RIGHT;
+	}
 	Direction getDirection(LogicalTile tile) {
 		Point h = hole.lp; Point t = tile.lp;
 		if (h.x != t.x && h.y != t.y) return Direction.NONE;
-		return (h.x == t.x)?
-				(h.y < t.y)? Direction.UP : Direction.DOWN :
-				(h.x < t.x)? Direction.LEFT : Direction.RIGHT;
+		return getDirection(h, t);
 	}
 	List<LogicalTile> getMovables(LogicalTile tile) {
 		Direction d = getDirection(tile);
